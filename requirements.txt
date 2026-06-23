@@ -1,0 +1,26 @@
+# requirements.txt — SDS Parser
+#
+# Installation :
+#   pip install -r requirements.txt
+#
+# ⚠️  Do NOT install package "fitz" from PyPI. Module `import fitz` is given by PyMuPDF.
+
+# ── PDF & OCR ──────────────────────────────────────────────────────────
+PyMuPDF>=1.23          # for the module `fitz`
+pytesseract>=0.3.10    # wrapper Tesseract OCR (Tesseract binaries installed on computer)
+Pillow>=10.0           # Images manipulation for OCR
+
+# ── Base de données Oracle / CISPro ──────────────────────────────────────────
+oracledb>=1.4          # Oracle client pur-Python (ex-cx_Oracle)
+
+# ── HTTP & données ──────────────────────────────────────────────────────
+requests>=2.31         # API requests CISPro + OpenRouter
+chardet>=5.0           # Encoding detection of TSV ghscode_10.txt
+pandas>=2.0            # Data manipulation
+
+# ── Interface interactive ─────────────────────────────────────────────────
+gradio==5.37.0         # UI web in the notebook
+
+# ── Daily Agent ────────────────────────────────────────────────────────
+pydantic>=2.0          # Validation of schemas (status of the run, LLM extraction)
+python-dotenv>=1.0     # Loading of credentials from .env
