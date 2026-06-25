@@ -76,9 +76,9 @@ def _get_llm_model() -> str | None:
 # Logging
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _setup_logging(run_id: str) -> None:
-    RUNS_DIR.mkdir(exist_ok=True)
-    log_file = RUNS_DIR / f"agent_{run_id}.log"
+def _setup_logging(run_dir: Path, run_id: str) -> None:
+    run_dir.mkdir(exist_ok=True)
+    log_file = run_dir / f"agent_{run_id}.log"
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
@@ -213,7 +213,7 @@ def run_agent(
     run_dir = RUNS_DIR / f"run_{run_id}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    _setup_logging(run_id)
+    _setup_logging(run_dir, run_id)
     logging.info(
         f"SDS Parser Daily Agent  |  run_id={run_id}  |  date={run_date}"
     )
