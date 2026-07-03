@@ -10,7 +10,7 @@ from pydantic import BaseModel, field_validator
 
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-# Valeurs "vides" renvoyées parfois par les LLM → normalisées en None
+# Empty values are normalized as None
 _EMPTY_VALUES = {"null", "none", "no data available", "n/a", "n.a.", "", "not specified"}
 
 
@@ -42,14 +42,14 @@ class SDSExtraction(BaseModel):
         v_low = v.lower()
         if v_low in {"solid", "liquid", "gas"}:
             return v_low
-        # Mapping de secours si le LLM n'a pas mappé lui-même
+        # Fallback mapping
         mapping = {
             "powder": "solid", "crystalline": "solid", "crystal": "solid",
             "granular": "solid", "pellet": "solid", "pellets": "solid",
             "aqueous solution": "liquid", "solution": "liquid", "fluid": "liquid",
             "vapour": "gas", "vapor": "gas",
         }
-        return mapping.get(v_low)  # None si non reconnu
+        return mapping.get(v_low)  # None if not found
 
 
 _EXTRACTION_PROMPT = """
