@@ -14,7 +14,7 @@ Pillow>=10.0           # Images manipulation for OCR
 oracledb>=1.4          # Oracle client pur-Python (ex-cx_Oracle)
 
 # ── HTTP & données ──────────────────────────────────────────────────────
-requests>=2.31         # API requests CISPro + OpenRouter
+requests>=2.31         # API requests CISPro + Ollama
 chardet>=5.0           # Encoding detection of TSV ghscode_10.txt
 pandas>=2.0            # Data manipulation
 
