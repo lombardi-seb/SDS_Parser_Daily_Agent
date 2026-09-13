@@ -48,7 +48,6 @@ def analyser_liste_ids(id_list_text, h_codes_dict):
     return pd.DataFrame(results, columns=["Material ID", "Statut"])
 
 def analyze_and_get_additional(mid, use_llm, model_name):
-    from config import OPENROUTER_API_KEY
     result, full_text = analyser_material_id(mid, H_CODES_DICT)
     
     if result is None:
@@ -60,7 +59,7 @@ def analyze_and_get_additional(mid, use_llm, model_name):
         return result, f"❌ Error parsing JSON: {e}"
         
     try:
-        additional_json = build_additional_json(parsed, full_text, model_name, OPENROUTER_API_KEY if use_llm else None)
+        additional_json = build_additional_json(parsed, full_text, model_name, use_llm=use_llm)
         return result, json.dumps(additional_json, indent=4, ensure_ascii=False)
     except Exception as e:
         return result, f"❌ Error building additional JSON: {e}"
@@ -80,4 +79,3 @@ def send_wrapper(username, password, json_data):
         return status
     except Exception as e:
         return f"Error during sending data : {e}"
-

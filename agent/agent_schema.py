@@ -1,5 +1,6 @@
 # agent/agent_schema.py
 # Pydantic models that describe the state of a single agent run.
+# Inspired by UdaciScan's schema.py / RepurposingBrief pattern.
 from __future__ import annotations
 
 from datetime import datetime
@@ -17,13 +18,21 @@ class StepStatus(str, Enum):
 
 
 class MaterialResult(BaseModel):
-    """Outcome of processing a single Z-number through the SDS pipeline."""
+    """
+    Outcome of processing a single Z-number through the SDS pipeline.
+
+    The two *_posted fields are tri-state on purpose:
+        True  → CISPro accepted the payload
+        False → CISPro call was made and failed
+        None  → call was never attempted (dry run, or earlier step failed)
+    """
     material_id:            str
     status:                 StepStatus = StepStatus.FAILED
+    dry_run:                bool = False
     main_json_saved:        bool = False
-    main_json_posted:       bool = False
+    main_json_posted:       Optional[bool] = None
     additional_json_saved:  bool = False
-    additional_json_posted: bool = False
+    additional_json_posted: Optional[bool] = None
     error:                  Optional[str] = None
     duration_s:             float = 0.0
 
@@ -53,6 +62,9 @@ class AgentRunState(BaseModel):
     end_time:       Optional[str]        = None
     use_llm:        bool                 = False
     model_name:     Optional[str]        = None
+    # True when the run performed extraction only: no CISPro write,
+    # no persistence in agent_state.json.
+    dry_run:        bool                 = False
 
     def log_step(
         self,

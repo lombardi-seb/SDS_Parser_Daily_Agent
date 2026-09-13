@@ -1,6 +1,7 @@
 # agent/reporter.py
 # Step 5 of the daily agent pipeline:
 # Writes the run artefacts to disk — trajectory log + human-readable summary.
+# Inspired by UdaciScan's runs/trace_<timestamp>.jsonl pattern.
 from __future__ import annotations
 
 import json
@@ -44,6 +45,9 @@ def write_summary(run_state: AgentRunState, runs_dir: Path) -> Path:
         "run_date":  run_state.run_date,
         "start_time": run_state.start_time,
         "end_time":  run_state.end_time,
+        # Explicit flag: in a dry run "processed_ok" means "extracted OK",
+        # NOT "sent to CISPro". Never read the stats without this flag.
+        "dry_run":   run_state.dry_run,
         "statistics": {
             "discovered":           len(run_state.discovered_ids),
             "new_to_process":       len(run_state.new_ids),
@@ -68,13 +72,18 @@ def _print_summary_to_log(summary: dict) -> None:
     s   = summary["statistics"]
     sep = "=" * 52
     logging.info(sep)
-    logging.info("  RUN SUMMARY")
+    logging.info("  RUN SUMMARY" + ("  🧪 DRY RUN" if summary.get("dry_run") else ""))
     logging.info(f"  Date            : {summary['run_date']}")
     logging.info(f"  Discovered      : {s['discovered']}")
     logging.info(f"  New IDs         : {s['new_to_process']}")
-    logging.info(f"  Success         : {s['processed_ok']}")
+    if summary.get("dry_run"):
+        logging.info(f"  Extracted OK    : {s['processed_ok']}  (not sent to CISPro)")
+    else:
+        logging.info(f"  Success         : {s['processed_ok']}")
     logging.info(f"  Failed          : {s['failed']}")
     logging.info(f"  Skipped         : {s['skipped_already_done']}")
     if summary["failed_ids"]:
         logging.warning(f"  Failed IDs      : {summary['failed_ids']}")
+    if summary.get("dry_run"):
+        logging.warning("  No data written to CISPro — agent_state.json untouched.")
     logging.info(sep)

@@ -1,14 +1,3 @@
-openai/gpt-oss-20b:free
-deepseek/deepseek-r1-0528:free
-google/gemma-3-12b-it:free
-mistralai/mistral-small-3.2-24b-instruct:free
-moonshotai/kimi-k2:free
-openai/gpt-oss-20b:free
-qwen/qwen3-235b-a22b-07-25:free
-tencent/hunyuan-a13b-instruct:free
-tngtech/deepseek-r1t2-chimera:free
-x-ai/grok-4-fast:free
-moonshotai/kimi-k2.5
-deepseek/deepseek-v3.1-terminus
-google/gemma-4-31b-it
-deepseek/deepseek-v3.2
+gemma4:26b
+gemma4:12b
+gemma4:e4b
