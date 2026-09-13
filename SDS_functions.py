@@ -15,6 +15,9 @@ from config import (
 )
 from llm_extraction import extract_sds_data_via_llm
 from section2_isolation import isolate_section_2, log_shadow_diff, CONFIDENCE_THRESHOLD
+# get_euh_mode() is called, never imported as a value: the mode must be resolved
+# at call time so that --euh-mode can override the .env setting.
+from euh_codes import find_euh_codes, log_euh_findings, get_euh_mode
 
 pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
@@ -42,7 +45,7 @@ CISPRO_TOKEN = None
     analyser_material_id(material_id, h_codes_dict):
     envoyer_json(username, password, json_data):
 
-    build_additional_json(result_json, full_text=None, model_name=None, api_key=None):
+    build_additional_json(result_json, full_text=None, model_name=None, use_llm=False):
     send_additional_json(username, password, additional_json):
 """
 
@@ -202,7 +205,18 @@ def expand_hcodes(hcode_str):
     return '+'.join([p if p.startswith('H') else 'H' + p for p in parts])
 
 # Function to search for H-codes in a PDF file
-def search_h_codes_in_pdf(text, h_codes_dict, nodeid):
+def search_h_codes_in_pdf(text, h_codes_dict, nodeid, euh_codes_dict=None):
+    """
+    Match GHS H-codes (and, depending on the active EUH mode, EU CLP EUH statements)
+    and build the main CISPro JSON.
+
+    euh_codes_dict : optional EUH reference. When None the module-level cache of
+                     euh_codes.py is used, so existing call sites need no change.
+
+    EUH statements are supplemental information under CLP: no pictogram, no
+    signal word. They only ever appear in `labelCodes`, and only when the
+    active EUH mode is "on".
+    """
     found_h_codes = {
         "labelCodes": "", "pictograms": "", "classifications" : "", "signalWord_id" : "", "jurisdiction_id": "", "material_id": "", "nodetypename": ""
     }
@@ -223,7 +237,16 @@ def search_h_codes_in_pdf(text, h_codes_dict, nodeid):
     hcode_matches = re.findall(r'\bH\d{3}[a-zA-Z]{0,2}(?:\+(?:H)?\d{3}[a-zA-Z]{0,2})*\b', normalized_text)
     
     hcode_matches_canonized = [expand_hcodes(c) for c in hcode_matches]
-    
+
+    # EUH statements (EU CLP) — deliberately kept in their own set.
+    # They carry no pictogram and no signal word, so they must never reach
+    # pictograms_set / signalwords_set nor the GHS07 suppression rules below.
+    # Matching runs on `text` and not on `normalized_text`, because the '+'
+    # normalisation is meaningless for EUH codes (they never combine).
+    euh_codes_set = set()
+    if get_euh_mode() == "on":
+        euh_codes_set, _ = find_euh_codes(text, euh_codes_dict)
+
     # To avoid duplicates
     found_hcode_set = set()
 
@@ -245,13 +268,21 @@ def search_h_codes_in_pdf(text, h_codes_dict, nodeid):
 
 
     # No valid H-code found : return an 'empty' JSON to create a Jurisdiction without any H-code
+    # A product can legitimately carry EUH statements and no H-code at all
+    # (e.g. a solvent labelled only EUH019 / EUH066). In that case the signal
+    # word stays 'none' — EUH statements never carry one — but the codes are
+    # still reported. Note this branch must not fall through to the signal-word
+    # priority loop below, which would end on int(None).
     if not h_codes_set:
-        return {
+        empty_result = {
             "signalWord_id": 332028,
             "jurisdiction_id": 31745,
             "material_id": int(nodeid),
             "nodetypename": "GHS"
          }
+        if euh_codes_set:
+            empty_result["labelCodes"] = ",".join(sorted(euh_codes_set))
+        return empty_result
 
     # Rule for Signal Word
     # Define priority order for signalWord_id
@@ -282,10 +313,12 @@ def search_h_codes_in_pdf(text, h_codes_dict, nodeid):
         logging.info("Rule 3 applied: GHS07 - only skin or eye irritation - removed due to GHS08")       
 
     # Convert sets to comma-separated strings and construct JSON
+    # EUH codes join labelCodes only; pictograms, classifications and the signal
+    # word are built exclusively from the GHS H-codes above.
     found_h_codes = {
-        "labelCodes": ",".join(sorted(h_codes_set.union(p_codes_set))),
+        "labelCodes": ",".join(sorted(h_codes_set | p_codes_set | euh_codes_set)),
         "pictograms": ",".join(filter(None, pictograms_set)),  # Filter out empty strings
-        "classifications": ",".join(classifications_set),
+        "classifications": ",".join(filter(None, classifications_set)),
         "signalWord_id": int(selected_signal_word_id),
         "jurisdiction_id": 31745,
         "material_id": int(nodeid),
@@ -318,13 +351,13 @@ def assess_text_quality(doc: fitz.Document) -> str:
 
         # if too many weird characters
         weird_ratio = (len(text) - meaningful) / len(text) if len(text) > 0 else 1
-        if weird_ratio > 0.35:
+        if weird_ratio > 0.25:
             return "poor"
 
     if pages_with_text == 0:
         return "none"
 
-    if meaningful_chars / total_chars < 0.65:
+    if meaningful_chars / total_chars < 0.75:
         return "poor"
     
     return "good"
@@ -380,6 +413,19 @@ def analyser_material_id(material_id, h_codes_dict):
         log_shadow_diff(material_id, result_section2, result_fulldoc,
                         confidence, use_section2)
 
+        # Audit EUH : run on the scope that actually produced the deliverable,
+        # so the audit file reflects what would be (or was) sent to CISPro.
+        # Runs in "audit" and "on" modes alike; "audit" changes nothing in the
+        # JSON above and exists purely to quantify occurrences before switching.
+        euh_mode = get_euh_mode()
+        if euh_mode in ("audit", "on"):
+            euh_scope_text = section2_text if use_section2 else full_text
+            euh_known, euh_unknown = find_euh_codes(euh_scope_text)
+            log_euh_findings(
+                material_id, euh_known, euh_unknown, euh_mode,
+                scope="section2" if use_section2 else "fulldoc",
+            )
+
         global LAST_RESULT_JSON
         LAST_RESULT_JSON = result
 
@@ -421,9 +467,10 @@ def envoyer_json(username, password, json_data):
     except Exception as exc:
         return f"Exception during POST : {exc}"
 
-def build_additional_json(result_json, full_text=None, model_name=None, api_key=None):
+def build_additional_json(result_json, full_text=None, model_name=None, use_llm=False):
     """
-    Create the secondary JSON for Additional information
+    Create the secondary JSON for Additional information.
+    LLM enrichment (via Ollama) runs only when use_llm is True and a model is given.
     """
     if result_json is None:
         logging.error("⚠️ result_json is None")
@@ -446,11 +493,11 @@ def build_additional_json(result_json, full_text=None, model_name=None, api_key=
     physical_state = boiling_point = flash_point = storage_and_handling = None
 
     # Sans LLM : JSON court (comportement identique à l'original)
-    if not (full_text and model_name and api_key):
+    if not (full_text and model_name and use_llm):
         return {"nodeid": nodeid, "hazardous": hazardous, "ppe": ppe}
 
-    # Un seul appel LLM, résultat validé
-    data = extract_sds_data_via_llm(full_text, model_name, api_key)
+    # Un seul appel LLM (Ollama), résultat validé. base_url/num_ctx viennent de config.
+    data = extract_sds_data_via_llm(full_text, model_name)
     logging.info(f"✅ LLM extraction: {data.model_dump()}")
 
     return {
@@ -501,4 +548,3 @@ def send_additional_json(username, password, additional_json):
 
     except Exception as e:
         return f"Exception during PUT: {e}"
-
