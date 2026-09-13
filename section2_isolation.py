@@ -95,7 +95,10 @@ def isolate_section_2(full_text: str) -> tuple[Optional[str], float]:
     conf = 0.6
     if len(block) >= 40:
         conf += 0.2
-    if re.search(r"\bH\d{3}", block):
+    # (?:EUH|H) : a section 2 carrying only EUH statements (a solvent labelled
+    # just EUH019, say) is a properly classified section 2 and should score the
+    # same as one carrying H-codes.
+    if re.search(r"\b(?:EUH|H)\d{3}", block):
         conf += 0.2
     return block, round(min(conf, 1.0), 2)
 
@@ -103,11 +106,17 @@ def isolate_section_2(full_text: str) -> tuple[Optional[str], float]:
 # ── Audit "shadow" ────────────────────────────────────────────────────────────
 
 def _hcodes_of(result: object) -> set[str]:
-    """Ensemble des codes H d'un résultat search_h_codes_in_pdf (ignore les P-codes)."""
+    """
+    Hazard codes of a search_h_codes_in_pdf result, P-codes excluded.
+
+    EUH codes are included when present (EUH_MODE == "on"), so the shadow audit
+    covers them too: a section-2 scan and a full-document scan can disagree on
+    an EUH statement exactly as they can on an H-code.
+    """
     if not isinstance(result, dict):
         return set()
     label = result.get("labelCodes", "")
-    return {t for t in label.split(",") if t.startswith("H")}
+    return {t for t in label.split(",") if t.startswith("H") or t.startswith("EUH")}
 
 
 def log_shadow_diff(
@@ -121,9 +130,9 @@ def log_shadow_diff(
     Compare result of section-2 vs result of full document and store
     the difference WITHOUT modify. Return True if differs.
 
-    Écrit :
-      - une ligne `logging` (INFO si identique, WARNING si diffère),
-      - une ligne JSON dans SHADOW_LOG_PATH (si SHADOW_ENABLED).
+    Write :
+      - one line `logging` (INFO if similar, WARNING if different),
+      - one line JSON in SHADOW_LOG_PATH (if SHADOW_ENABLED).
     """
     if not SHADOW_ENABLED:
         return False
