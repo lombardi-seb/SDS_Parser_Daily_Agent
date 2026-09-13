@@ -1,0 +1,46 @@
+#	EUH supplemental hazard statements — Regulation (EC) No 1272/2008 (CLP), Annex II Part 1 / Annex III Parts 2 and 3.
+#	SOURCE: EU CLP Regulation, consolidated text. These statements are NOT part of the UN GHS (Rev. 10) catalogue
+#	and are therefore kept in a file separate from ghscode_10.txt, whose provenance is UN/UNECE.
+#	EUH statements carry NO pictogram and NO signal word: they are supplemental information, not a classification.
+#	The "Include" column drives detection. Set it to TRUE to have the code recognised, FALSE to ignore it.
+#	Lines starting with '#' are comments and are skipped by the loader.
+EUH-Code	Hazard Statement (EN)	Type	CLP Reference	Include	Notes
+EUH001	Explosive when dry	Physical	Annex III Part 2, Table 2.1	TRUE	Deleted by Reg. (EU) 487/2013; still encountered on legacy SDSs
+EUH014	Reacts violently with water	Physical	Annex III Part 2, Table 2.1	TRUE	
+EUH018	In use may form flammable/explosive vapour-air mixture	Physical	Annex III Part 2, Table 2.1	TRUE	
+EUH019	May form explosive peroxides	Physical	Annex III Part 2, Table 2.1	TRUE	Typical of ethers, THF, dioxane, isopropanol
+EUH044	Risk of explosion if heated under confinement	Physical	Annex III Part 2, Table 2.1	TRUE	
+EUH029	Contact with water liberates toxic gas	Health	Annex III Part 2, Table 2.2	TRUE	
+EUH031	Contact with acids liberates toxic gas	Health	Annex III Part 2, Table 2.2	TRUE	
+EUH032	Contact with acids liberates very toxic gas	Health	Annex III Part 2, Table 2.2	TRUE	
+EUH066	Repeated exposure may cause skin dryness or cracking	Health	Annex III Part 2, Table 2.2	TRUE	
+EUH070	Toxic by eye contact	Health	Annex III Part 2, Table 2.2	TRUE	
+EUH071	Corrosive to the respiratory tract	Health	Annex III Part 2, Table 2.2	TRUE	
+EUH059	Hazardous to the ozone layer	Environment	Annex III Part 2 (deleted)	TRUE	Superseded by H420; still encountered on legacy SDSs
+#	--- Endocrine disruption / PBT / vPvB / PMT / vPvM — introduced by Reg. (EU) 2023/707 ---
+EUH380	May cause endocrine disruption in humans	Health	Annex III Part 2 (2023/707)	TRUE	ED HH Category 1
+EUH381	Suspected of causing endocrine disruption in humans	Health	Annex III Part 2 (2023/707)	TRUE	ED HH Category 2
+EUH430	May cause endocrine disruption in the environment	Environment	Annex III Part 2 (2023/707)	TRUE	ED ENV Category 1
+EUH431	Suspected of causing endocrine disruption in the environment	Environment	Annex III Part 2 (2023/707)	TRUE	ED ENV Category 2
+EUH440	Accumulates in the environment and living organisms including in humans	Environment	Annex III Part 2 (2023/707)	TRUE	PBT
+EUH441	Strongly accumulates in the environment and living organisms including in humans	Environment	Annex III Part 2 (2023/707)	TRUE	vPvB
+EUH450	Can cause long-lasting and diffuse contamination of water resources	Environment	Annex III Part 2 (2023/707)	TRUE	PMT
+EUH451	Can cause very long-lasting and diffuse contamination of water resources	Environment	Annex III Part 2 (2023/707)	TRUE	vPvM
+#	--- Supplemental LABEL elements for certain mixtures (Annex III Part 3) ---
+#	Consumer-facing labelling boilerplate: little value for an inventory database.
+#	Shipped as Include=FALSE. Flip to TRUE if the CISPro users ask for them.
+EUH201	Contains lead. Should not be used on surfaces liable to be chewed or sucked by children	Label element	Annex III Part 3	FALSE	
+EUH201A	Warning! Contains lead	Label element	Annex III Part 3	FALSE	Letter suffix is part of the code
+EUH202	Cyanoacrylate. Danger. Bonds skin and eyes in seconds. Keep out of the reach of children	Label element	Annex III Part 3	FALSE	
+EUH203	Contains chromium (VI). May produce an allergic reaction	Label element	Annex III Part 3	FALSE	
+EUH204	Contains isocyanates. May produce an allergic reaction	Label element	Annex III Part 3	FALSE	
+EUH205	Contains epoxy constituents. May produce an allergic reaction	Label element	Annex III Part 3	FALSE	
+EUH206	Warning! Do not use together with other products. May release dangerous gases (chlorine)	Label element	Annex III Part 3	FALSE	
+EUH207	Warning! Contains cadmium. Dangerous fumes are formed during use. See information supplied by the manufacturer. Comply with the safety instructions	Label element	Annex III Part 3	FALSE	
+EUH208	Contains (name of sensitising substance). May produce an allergic reaction	Label element	Annex III Part 3	FALSE	Very frequent; would add noise to labelCodes
+EUH209	Can become highly flammable in use	Label element	Annex III Part 3	FALSE	
+EUH209A	Can become flammable in use	Label element	Annex III Part 3	FALSE	Letter suffix is part of the code
+EUH210	Safety data sheet available on request	Label element	Annex III Part 3	FALSE	
+EUH211	Warning! Hazardous respirable droplets may be formed when sprayed. Do not breathe spray or mist	Label element	Annex III Part 3	FALSE	
+EUH212	Warning! Hazardous respirable dust may be formed when used. Do not breathe dust	Label element	Annex III Part 3	FALSE	
+EUH401	To avoid risks to human health and the environment, comply with the instructions for use	Label element	Annex II Part 4 (plant protection products)	FALSE
